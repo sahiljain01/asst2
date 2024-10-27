@@ -189,8 +189,8 @@ void spawnThreadSleeping(TaskSystemStateCV* ts) {
 			int taskToRun = --ts->m_queueSize;
 			lk.unlock();
 			ts->m_runnable->runTask(taskToRun, ts->m_numTotalTasks);
-			ts->m_completedCount++;
-			if (ts->m_completedCount == ts->m_numTotalTasks) {
+			int incrementedCount = ts->m_completedCount.fetch_add(1) + 1;
+			if (incrementedCount == ts->m_numTotalTasks) {
 				ts->m_notifySignalCV->notify_all();
 			}
 			lk.lock();
