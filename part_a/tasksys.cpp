@@ -106,6 +106,7 @@ void spawnThreadAlwaysSpinning(TaskSystemState* ts) {
 		ts->m_queueMutex->lock();
 		if (ts->m_queueSize > 0) {
 			int taskToRun = --ts->m_queueSize;
+			// std::cout << "running task: " << taskToRun << "with queue size: " << ts->m_queueSize << std::endl;
 			ts->m_queueMutex->unlock();
 			ts->m_runnable->runTask(taskToRun, ts->m_numTotalTasks);
 			ts->m_completedCount++;
@@ -144,12 +145,13 @@ void TaskSystemParallelThreadPoolSpinning::run(IRunnable* runnable, int num_tota
     m_tss->m_runnable = runnable;
     m_tss->m_numTotalTasks = num_total_tasks;
     m_tss->m_queueSize = num_total_tasks;
-    while (m_tss->m_completedCount < num_total_tasks) {
+    while (m_tss->m_completedCount != num_total_tasks) {
+    	    // std::cout << "queue size: " << m_tss->m_queueSize << std::endl;
 	    continue;
     }
+//     std::cout << "queue size final: " << m_tss->m_queueSize << std::endl;
     m_tss->m_completedCount.store(0);
     m_tss->m_numTotalTasks = 0;
-    m_tss->m_queueSize = 0;
 }
 
 TaskID TaskSystemParallelThreadPoolSpinning::runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
