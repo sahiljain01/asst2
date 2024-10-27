@@ -184,18 +184,21 @@ void TaskSystemParallelThreadPoolSpinning::sync() {
 void spawnThreadSleeping(TaskSystemStateCV* ts) {
 	while (!ts->m_inactive) { 
 		std::unique_lock<std::mutex> lk(*ts->m_queueMutex);
-		ts->m_notifyWorkersCV->wait(lk);	
+		// ts->m_notifyWorkersCV->wait(lk);
 		while (ts->m_queueSize > 0) {
 			int taskToRun = --ts->m_queueSize;
 			lk.unlock();
-			ts->m_runnable->runTask(taskToRun, ts->m_numTotalTasks);
-			int incrementedCount = ts->m_completedCount.fetch_add(1) + 1;
-			if (incrementedCount == ts->m_numTotalTasks) {
-				ts->m_notifySignalCV->notify_all();
+			if (ts->m_runnable == nullptr) {
+				std::cout << "runnable is a nullptr for task: " << taskToRun << "with num tasks: " << ts->m_numTotalTasks << ", queue size: " <<  ts->m_queueSize << std::endl;
 			}
+			ts->m_runnable->runTask(taskToRun, ts->m_numTotalTasks);
+			ts->m_completedCount++;
 			lk.lock();
 		}
 		lk.unlock();
+		if (ts->m_completedCount == ts->m_numTotalTasks) {
+			ts->m_notifySignalCV->notify_all();
+		}
 		if (ts->m_inactive) {
 			break;
 		}
@@ -232,16 +235,20 @@ TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping()
 }
 
 void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_total_tasks) {
-    std::unique_lock<std::mutex> lk(*m_tss->m_queueMutex);
     m_tss->m_runnable = runnable;
     m_tss->m_numTotalTasks = num_total_tasks;
     m_tss->m_queueSize = num_total_tasks;
     m_tss->m_notifyWorkersCV->notify_all();
-    lk.unlock();
 
+    while (m_tss->m_completedCount < num_total_tasks) {
+	    continue;
+    }
+   
+   /* 
     std::unique_lock<std::mutex> lk2(*m_tss->m_queueMutex);
     m_tss->m_notifySignalCV->wait(lk2);
     lk2.unlock();
+*/
 
     m_tss->m_runnable = nullptr;
     m_tss->m_completedCount.store(0);
