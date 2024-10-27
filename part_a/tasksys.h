@@ -2,6 +2,10 @@
 #define _TASKSYS_H
 
 #include "itasksys.h"
+#include <mutex>
+#include <atomic>
+#include <thread>
+#include <condition_variable>
 
 /*
  * TaskSystemSerial: This class is the student's implementation of a
@@ -19,6 +23,38 @@ class TaskSystemSerial: public ITaskSystem {
         void sync();
 };
 
+
+class TaskSystemState {
+    public:
+        TaskSystemState(int queueSize, int numTotalTasks, std::mutex* mtx, IRunnable* runnable, bool inactive): m_queueSize(queueSize), m_numTotalTasks(numTotalTasks), m_queueMutex(mtx), m_runnable(runnable), m_completedCount(0), m_inactive(inactive) {}
+	~TaskSystemState() {
+		delete m_queueMutex;
+	}
+	int m_queueSize;
+	int m_numTotalTasks;
+	std::mutex* m_queueMutex;
+	IRunnable* m_runnable;
+	std::atomic<int> m_completedCount;
+	bool m_inactive;
+};
+
+
+class TaskSystemStateCV {
+    public:
+        TaskSystemStateCV(int queueSize, int numTotalTasks, std::mutex* mtx, IRunnable* runnable, bool inactive, std::condition_variable* notifyWorkersCV, std::condition_variable* notifySignalCV): m_queueSize(queueSize), m_numTotalTasks(numTotalTasks), m_queueMutex(mtx), m_runnable(runnable), m_completedCount(0), m_inactive(inactive), m_notifyWorkersCV(notifyWorkersCV), m_notifySignalCV(notifySignalCV) {}
+	~TaskSystemStateCV() {
+		delete m_queueMutex;
+	}
+	int m_queueSize;
+	int m_numTotalTasks;
+	std::mutex* m_queueMutex;
+	IRunnable* m_runnable;
+	std::atomic<int> m_completedCount;
+	bool m_inactive;
+	std::condition_variable* m_notifyWorkersCV;
+	std::condition_variable* m_notifySignalCV;
+};
+
 /*
  * TaskSystemParallelSpawn: This class is the student's implementation of a
  * parallel task execution engine that spawns threads in every run()
@@ -34,6 +70,9 @@ class TaskSystemParallelSpawn: public ITaskSystem {
         TaskID runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
                                 const std::vector<TaskID>& deps);
         void sync();
+
+    private:
+	int m_numThreads;
 };
 
 /*
@@ -51,6 +90,10 @@ class TaskSystemParallelThreadPoolSpinning: public ITaskSystem {
         TaskID runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
                                 const std::vector<TaskID>& deps);
         void sync();
+    private:
+	int m_numThreads;
+	TaskSystemState* m_tss;
+	std::thread* m_threads;
 };
 
 /*
@@ -68,6 +111,12 @@ class TaskSystemParallelThreadPoolSleeping: public ITaskSystem {
         TaskID runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
                                 const std::vector<TaskID>& deps);
         void sync();
+
+    private:
+	int m_numThreads;
+	TaskSystemStateCV* m_tss;
+	std::thread* m_threads;
+
 };
 
 #endif
