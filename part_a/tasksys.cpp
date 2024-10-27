@@ -149,7 +149,7 @@ void TaskSystemParallelThreadPoolSpinning::run(IRunnable* runnable, int num_tota
     	    // std::cout << "queue size: " << m_tss->m_queueSize << std::endl;
 	    continue;
     }
-//     std::cout << "queue size final: " << m_tss->m_queueSize << std::endl;
+    std::cout << "queue size final: " << m_tss->m_queueSize << std::endl;
     m_tss->m_completedCount.store(0);
     m_tss->m_numTotalTasks = 0;
 }
