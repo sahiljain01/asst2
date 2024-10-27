@@ -108,6 +108,9 @@ void spawnThreadAlwaysSpinning(TaskSystemState* ts) {
 			int taskToRun = --ts->m_queueSize;
 			// std::cout << "running task: " << taskToRun << "with queue size: " << ts->m_queueSize << std::endl;
 			ts->m_queueMutex->unlock();
+			if (ts->m_runnable == nullptr) {
+				std::cout << "tried to run a nullptr" << std::endl;
+			}
 			ts->m_runnable->runTask(taskToRun, ts->m_numTotalTasks);
 			ts->m_completedCount++;
 		}
