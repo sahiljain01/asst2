@@ -186,6 +186,8 @@ void spawnThreadSleeping(TaskSystemStateCV* ts) {
 			runnable->runTask(taskToRun, ts->m_numTotalTasks);
 			ts->m_completedCount++;
 			lk.lock();
+		        qSize = ts->m_queueSize;
+		        runnable = ts->m_runnable;
 		}
 		lk.unlock();
 		if (ts->m_completedCount == ts->m_numTotalTasks) {
