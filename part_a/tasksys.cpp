@@ -236,10 +236,9 @@ void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_tota
     m_tss->m_runnable = runnable;
     m_tss->m_numTotalTasks = num_total_tasks;
     m_tss->m_queueSize = num_total_tasks;
+    m_tss->m_notifyWorkersCV->notify_all();
     lk.unlock();
 
-    int initialTasksToSchedule = std::min(num_total_tasks, m_numThreads);
-    m_tss->m_notifyWorkersCV->notify_all();
     std::unique_lock<std::mutex> lk2(*m_tss->m_queueMutex);
     m_tss->m_notifySignalCV->wait(lk2);
     lk2.unlock();
