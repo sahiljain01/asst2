@@ -104,12 +104,12 @@ void TaskSystemParallelSpawn::sync() {
 void spawnThreadAlwaysSpinning(TaskSystemState* ts) {
 	while (!ts->m_inactive) {
 		ts->m_queueMutex->lock();
-		if (ts->m_queueSize > 0) {
+		if ((ts->m_queueSize > 0) && (ts->m_runnable != nullptr)) {
 			int taskToRun = --ts->m_queueSize;
 			ts->m_queueMutex->unlock();
-			if (ts->m_runnable == nullptr) {
-				std::cout << "tried to run a nullptr with a task id " << taskToRun << "and completed count: " << ts->m_completedCount << std::endl;
-			}
+			//if (ts->m_runnable == nullptr) {
+			//	std::cout << "tried to run a nullptr with a task id " << taskToRun << "and completed count: " << ts->m_completedCount << std::endl;
+			// }
 			ts->m_runnable->runTask(taskToRun, ts->m_numTotalTasks);
 			ts->m_completedCount++;
 		}
