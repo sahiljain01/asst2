@@ -149,6 +149,7 @@ void TaskSystemParallelThreadPoolSpinning::run(IRunnable* runnable, int num_tota
     }
     m_tss->m_completedCount.store(0);
     m_tss->m_numTotalTasks = 0;
+    m_tss->m_queueSize = 0;
 }
 
 TaskID TaskSystemParallelThreadPoolSpinning::runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
