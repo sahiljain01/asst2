@@ -185,7 +185,7 @@ void spawnThreadSleeping(TaskSystemStateCV* ts) {
 	while (!ts->m_inactive) { 
 		std::unique_lock<std::mutex> lk(*ts->m_queueMutex);
 		// ts->m_notifyWorkersCV->wait(lk);
-		while (ts->m_queueSize > 0) {
+		while ((ts->m_queueSize > 0) && (ts->m_runnable != nullptr)) {
 			int taskToRun = --ts->m_queueSize;
 			lk.unlock();
 			if (ts->m_runnable == nullptr) {
