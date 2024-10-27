@@ -238,7 +238,7 @@ void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_tota
     m_tss->m_runnable = runnable;
     m_tss->m_numTotalTasks = num_total_tasks;
     m_tss->m_queueSize = num_total_tasks;
-    std::cout << m_tss->m_runnable << " " << m_tss->m_queueSize << std::endl;
+    // std::cout << m_tss->m_runnable << " " << m_tss->m_queueSize << std::endl;
     m_tss->m_notifyWorkersCV->notify_all();
 
     while (m_tss->m_completedCount < num_total_tasks) {
