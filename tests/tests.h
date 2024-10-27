@@ -473,6 +473,7 @@ class StrictDependencyTask: public IRunnable {
         }
 
         bool depsMet() {
+	    int index = 0;
             for (bool *b : in_flags_) {
                 if (*b == false) {
                     return false;
@@ -1368,6 +1369,7 @@ TestResults strictGraphDepsTestBase(ITaskSystem*t, int n, int m, unsigned int se
         flag_deps[t].push_back(done + s);
         eset.insert({s,t});
     }
+
 
     std::vector<IRunnable*> tasks;
     for (int i = 0; i < n; i++) {

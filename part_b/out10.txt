@@ -1,0 +1,58 @@
+===================================================================================
+Test name: strict_graph_deps_small_async
+===================================================================================
+[Serial]:		[1.996] ms
+[Parallel + Always Spawn]:		[2.024] ms
+[Parallel + Thread Pool + Spin]:		[2.031] ms
+task id sent: 0
+dep satisfied
+task id sent: 1
+dep satisfied
+task id sent: 2
+dep satisfied
+task id sent: 3
+dep: 0, for task id: 3
+dep not satisfied for task id: 3
+Task ID: 0, Task To Run: 8
+Task ID: 0, Task To Run: 7
+Task ID: 0, Task To Run: 6
+Task ID: 0, Task To Run: 2
+Task ID: 0, Task To Run: 5
+Task ID: 0, Task To Run: 3
+Task ID: 0, Task To Run: 1
+Task ID: 0, Task To Run: 0
+Task ID: 0, Task To Run: 4
+finished task: 0, length of waiting: 1
+completed task: 0
+pushing currentTask onto queue: 3
+Task ID: 1, Task To Run: 8
+Task ID: 1, Task To Run: 10
+Task ID: 1, Task To Run: 7
+Task ID: 1, Task To Run: 4
+Task ID: 1, Task To Run: 9
+Task ID: 1, Task To Run: 5
+Task ID: 1, Task To Run: 6
+Task ID: 1, Task To Run: 3
+Task ID: 1, Task To Run: 1
+Task ID: 1, Task To Run: 0
+Task ID: 3, Task To Run: 12
+Task ID: 2, Task To Run: 1
+Task ID: 1, Task To Run: 2
+finished task: 1, length of waiting: 0
+Task ID: 3, Task To Run: 7
+Task ID: 3, Task To Run: 9
+Task ID: 3, Task To Run: 11
+Task ID: 3, Task To Run: 10
+Task ID: 2, Task To Run: 0
+finished task: 2, length of waiting: 0
+Task ID: 3, Task To Run: 8
+Task ID: 3, Task To Run: 6
+Task ID: 3, Task To Run: 0
+Task ID: 3, Task To Run: 3
+Task ID: 3, Task To Run: 4
+Task ID: 3, Task To Run: 2
+Task ID: 3, Task To Run: 1
+Task ID: 3, Task To Run: 5
+finished task: 3, length of waiting: 0
+completed task size: 4
+ERROR: Results did not pass correctness check! (iter=0, ref_impl=Parallel + Thread Pool + Sleep)
