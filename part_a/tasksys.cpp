@@ -104,8 +104,9 @@ void TaskSystemParallelSpawn::sync() {
 void spawnThreadAlwaysSpinning(TaskSystemState* ts) {
 	while (!ts->m_inactive) {
 		ts->m_queueMutex->lock();
-		if (ts->m_queueSize > 0) {
+		if ((ts->m_queueSize > 0) && (ts->m_runnable != nullptr)) {
 			int taskToRun = --ts->m_queueSize;
+			auto runnable = ts->m_runnable;
 			// std::cout << "running task: " << taskToRun << "with queue size: " << ts->m_queueSize << std::endl;
 			ts->m_queueMutex->unlock();
 			if (ts->m_runnable == nullptr) {
