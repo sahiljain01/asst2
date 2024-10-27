@@ -196,6 +196,9 @@ void spawnThreadSleeping(TaskSystemStateCV* ts) {
 			lk.lock();
 		}
 		lk.unlock();
+		if (ts->m_inactive) {
+			break;
+		}
 	}
 }
 
@@ -217,10 +220,15 @@ TaskSystemParallelThreadPoolSleeping::TaskSystemParallelThreadPoolSleeping(int n
 	}
 }
 
-TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping() {
-	// todo: add delete for tss + thread array
-	// add destructor to tasksystemstatecv
-	// set ts->m_inactive to True and join all of the relevant threads!
+TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping() 
+{
+	m_tss->m_inactive = true;
+	m_tss->m_notifyWorkersCV->notify_all();
+	for (int i = 0; i < m_numThreads; i++) {
+		m_threads[i].join();
+	}
+	delete[] m_threads;
+	delete m_tss; 
 }
 
 void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_total_tasks) {
@@ -235,7 +243,6 @@ void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_tota
     m_tss->m_notifyWorkersCV->notify_all();
     m_tss->m_notifySignalCV->wait(lk2);
     lk2.unlock();
-
 
     m_tss->m_runnable = nullptr;
     m_tss->m_completedCount.store(0);
