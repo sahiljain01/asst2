@@ -106,7 +106,6 @@ void spawnThreadAlwaysSpinning(TaskSystemState* ts) {
 		ts->m_queueMutex->lock();
 		if (ts->m_queueSize > 0) {
 			int taskToRun = --ts->m_queueSize;
-			auto runnable = ts->m_runnable;
 			ts->m_queueMutex->unlock();
 			if (ts->m_runnable == nullptr) {
 				std::cout << "tried to run a nullptr with a task id " << taskToRun << "and completed count: " << ts->m_completedCount << std::endl;
@@ -225,9 +224,11 @@ TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping() {
 }
 
 void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_total_tasks) {
+    std::unique_lock<std::mutex> lk(*m_tss->m_queueMutex);
     m_tss->m_runnable = runnable;
     m_tss->m_numTotalTasks = num_total_tasks;
     m_tss->m_queueSize = num_total_tasks;
+    lk.unlock();
 
     int initialTasksToSchedule = std::min(num_total_tasks, m_numThreads);
     std::unique_lock<std::mutex> lk2(*m_tss->m_queueMutex);
@@ -235,8 +236,11 @@ void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_tota
     m_tss->m_notifySignalCV->wait(lk2);
     lk2.unlock();
 
+
+    m_tss->m_runnable = nullptr;
     m_tss->m_completedCount.store(0);
     m_tss->m_numTotalTasks = 0;
+    m_tss->m_queueSize = 0;
 }
 
 TaskID TaskSystemParallelThreadPoolSleeping::runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
