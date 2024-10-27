@@ -121,12 +121,12 @@ const char* TaskSystemParallelThreadPoolSpinning::name() {
 }
 
 TaskSystemParallelThreadPoolSpinning::TaskSystemParallelThreadPoolSpinning(int num_threads): ITaskSystem(num_threads) {
-	m_numThreads = num_threads;
+	m_numThreads = num_threads - 1;
 	std::mutex* mtx = new std::mutex();
 	m_tss = new TaskSystemState(0, 0, mtx, nullptr, false);
 	m_threads = new std::thread[m_numThreads]; 
 
-	for (int i = 0; i < num_threads; i++) {
+	for (int i = 0; i < m_numThreads; i++) {
 		m_threads[i] = std::thread(spawnThreadAlwaysSpinning, m_tss);
 	}
 }
