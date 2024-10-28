@@ -226,9 +226,6 @@ TaskSystemParallelThreadPoolSleeping::TaskSystemParallelThreadPoolSleeping(int n
 	for (int i = 0; i < m_numThreads; i++) {
 		m_threads[i] = std::thread(spawnThreadSleeping, m_tss, i);
 	}
-	while (m_tss->m_waitingThreads != m_numThreads) {
-		continue;
-	}
 }
 
 TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping() 
