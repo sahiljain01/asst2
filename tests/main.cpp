@@ -83,6 +83,7 @@ int main(int argc, char** argv)
         strictGraphDepsSmall,
         strictGraphDepsMedium,
         strictGraphDepsLarge,
+	simpleUnequalSleepTask
     };
 
     std::string test_names[n_tests] = {
@@ -115,6 +116,7 @@ int main(int argc, char** argv)
         "strict_graph_deps_small_async",
         "strict_graph_deps_med_async",
         "strict_graph_deps_large_async",
+	"simple_unequal_sleep_task",
     };
  
     // Parse commandline options

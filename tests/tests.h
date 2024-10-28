@@ -60,22 +60,30 @@ typedef struct {
 /*
  * Implement your task here
 */
-class YourTask : public IRunnable {
+class YourTask: public IRunnable {
     public:
         YourTask() {}
         ~YourTask() {}
-        void runTask(int task_id, int num_total_tasks) {}
+        void runTask(int task_id, int num_total_tasks) {
+		if (task_id == 0) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		}
+		else {
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+	}
 };
 /*
  * Implement your test here. Call this function from a wrapper that passes in
  * do_async and num_elements. See `simpleTest`, `simpleTestSync`, and
  * `simpleTestAsync` as an example.
  */
-TestResults yourTest(ITaskSystem* t, bool do_async, int num_elements, int num_bulk_task_launches) {
+TestResults yourTest(ITaskSystem* t, bool do_async) {
     // TODO: initialize your input and output buffers
-    int* output = new int[num_elements];
+    // int* output = new int[num_elements];
 
     // TODO: instantiate your bulk task launches
+    YourTask stt = YourTask();
 
     // Run the test
     double start_time = CycleTimer::currentSeconds();
@@ -85,6 +93,7 @@ TestResults yourTest(ITaskSystem* t, bool do_async, int num_elements, int num_bu
         // make calls to t->runAsyncWithDeps and push TaskID to dependency vector
         // t->sync() at end
     } else {
+	t->run(&stt, 16); 
         // TODO: make calls to t->run
     }
     double end_time = CycleTimer::currentSeconds();
@@ -92,7 +101,7 @@ TestResults yourTest(ITaskSystem* t, bool do_async, int num_elements, int num_bu
     // Correctness validation
     TestResults results;
     results.passed = true;
-
+/*
     for (int i=0; i<num_elements; i++) {
         int value = 0; // TODO: initialize value
         for (int j=0; j<num_bulk_task_launches; j++) {
@@ -105,10 +114,10 @@ TestResults yourTest(ITaskSystem* t, bool do_async, int num_elements, int num_bu
             printf("%d: %d expected=%d\n", i, output[i], expected);
             break;
         }
-    }
+     } */
     results.time = end_time - start_time;
 
-    delete [] output;
+    // delete [] output;
 
     return results;
 }
@@ -566,6 +575,10 @@ TestResults simpleTestSync(ITaskSystem* t) {
 
 TestResults simpleTestAsync(ITaskSystem* t) {
     return simpleTest(t, true);
+}
+
+TestResults simpleUnequalSleepTask(ITaskSystem* t) {
+	return yourTest(t, false);
 }
 
 /*
