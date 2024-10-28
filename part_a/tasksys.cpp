@@ -180,7 +180,7 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 			ts->m_waitingThreads++;	
 			didSet = true;
 		}
-		ts->m_notifyWorkersCV->wait(lk);
+		// ts->m_notifyWorkersCV->wait(lk);
 		// std::cout << "thread running" << threadId << std::endl; 
 		int qSize = ts->m_queueSize;
 		auto runnable = ts->m_runnable;
