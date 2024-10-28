@@ -41,7 +41,7 @@ class TaskSystemState {
 
 class TaskSystemStateCV {
     public:
-        TaskSystemStateCV(int queueSize, int numTotalTasks, std::mutex* mtx, IRunnable* runnable, bool inactive, std::condition_variable* notifyWorkersCV, std::condition_variable* notifySignalCV, std::mutex* finishedMutex): m_queueSize(queueSize), m_numTotalTasks(numTotalTasks), m_queueMutex(mtx), m_runnable(runnable), m_completedCount(0), m_inactive(inactive), m_notifyWorkersCV(notifyWorkersCV), m_notifySignalCV(notifySignalCV), m_finishedMutex(finishedMutex), m_waitingThreads(0) {}
+        TaskSystemStateCV(int queueSize, int numTotalTasks, std::mutex* mtx, IRunnable* runnable, bool inactive, std::condition_variable* notifyWorkersCV, std::condition_variable* notifySignalCV, std::mutex* finishedMutex): m_queueSize(queueSize), m_numTotalTasks(numTotalTasks), m_queueMutex(mtx), m_runnable(runnable), m_completedCount(0), m_inactive(inactive), m_notifyWorkersCV(notifyWorkersCV), m_notifySignalCV(notifySignalCV), m_finishedMutex(finishedMutex) {}
 	~TaskSystemStateCV() {
 		delete m_queueMutex;
 	}
@@ -54,7 +54,6 @@ class TaskSystemStateCV {
 	std::condition_variable* m_notifyWorkersCV;
 	std::condition_variable* m_notifySignalCV;
 	std::mutex* m_finishedMutex;
-	std::atomic<int> m_waitingThreads;
 };
 
 /*
