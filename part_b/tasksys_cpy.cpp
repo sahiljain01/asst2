@@ -125,15 +125,15 @@ void TaskSystemParallelThreadPoolSpinning::sync() {
 void spawnThreadSleeping(TaskQueue* tq) {
 	while (!tq->m_inactive) { 
 		std::unique_lock<std::mutex> lk(*tq->m_queueMutex);
+		tq->m_notifyWorkersCV->wait(lk);	
 		while (tq->m_tasksReady.size() > 0) {
 			auto ts = tq->m_tasksReady[0];
 			int taskToRun = --ts->m_queueSize;
-			auto runnable = ts->m_runnable;
 			if (taskToRun == 0) {
 				tq->m_tasksReady.erase(tq->m_tasksReady.begin());
 			}
 			lk.unlock();
-			runnable->runTask(taskToRun, ts->m_numTotalTasks);
+			ts->m_runnable->runTask(taskToRun, ts->m_numTotalTasks);
 			int completedCnt = ts->m_completedCount.fetch_add(1) + 1;
 			lk.lock();
 			if (completedCnt == ts->m_numTotalTasks) {
@@ -196,22 +196,22 @@ void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_tota
 
 TaskID TaskSystemParallelThreadPoolSleeping::runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
                                                     const std::vector<TaskID>& deps) {
-    TaskID task_id = m_currTaskID.load(); 
+    TaskID task_id = m_currTaskID.load(); // create a task ID for this new task
     m_currTaskID++;
-    m_taskQueue->m_tasksCreated++; 
+    m_taskQueue->m_tasksCreated++; // keep track of the total number of tasks created
     std::mutex* taskLevelMutex = new std::mutex();
-    std::vector<TaskID> depsCpy;
 
+    // queue size for this task, total num tasks, task fn, inactive?, dependencies, task ID, and task level mutex 
+    auto taskTss = new TaskSystemStateCV(num_total_tasks, num_total_tasks, runnable, false, deps, task_id, taskLevelMutex);
+    // check if dependencies are satisfied for this task from the onset
     bool dep_not_satisfied = false;
     std::unique_lock<std::mutex> lk2(*m_taskQueue->m_queueMutex);
     for (auto dep: deps) {
 	    if (m_taskQueue->m_tasksCompleted.find(dep) == m_taskQueue->m_tasksCompleted.end()) {
-		   dep_not_satisfied = true;
-		   depsCpy.push_back(dep); 
+		    dep_not_satisfied = true;
+		    break;
 	    }
-	    
     }
-    auto taskTss = new TaskSystemStateCV(num_total_tasks, num_total_tasks, runnable, false, depsCpy, task_id, taskLevelMutex);
     if (dep_not_satisfied) {
 	    m_taskQueue->m_tasksWaiting.push_back(taskTss);
     }
@@ -220,17 +220,15 @@ TaskID TaskSystemParallelThreadPoolSleeping::runAsyncWithDeps(IRunnable* runnabl
     }
     lk2.unlock(); 
 
+    // tell all workers that there is a new task that just came in, in case there are idle workers.
     m_taskQueue->m_notifyWorkersCV->notify_all();
     return task_id;
 }
 
 void TaskSystemParallelThreadPoolSleeping::sync() {
     while (m_currTaskID != m_taskQueue->m_tasksCompleted.size()) {
-	    for (auto waitingTask: m_taskQueue->m_tasksWaiting) {
-		    // std::cout << "task waiting: " << waitingTask->m_taskID << "for: " << waitingTask->m_activeDeps[0] << std::endl;
-	    }
-	    // std::cout << "task queue waiting size" << m_taskQueue->m_tasksWaiting.size() << std::endl;
-	    // std::cout << "task queue ready size" << m_taskQueue->m_tasksReady.size() << std::endl;
+	    std::cout << "task queue waiting size" << m_taskQueue->m_tasksWaiting.size() << std::endl;
+	    std::cout << "task queue ready size" << m_taskQueue->m_tasksReady.size() << std::endl;
             m_taskQueue->m_notifyWorkersCV->notify_all();
 	    continue;
     }
