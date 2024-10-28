@@ -246,7 +246,7 @@ void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_tota
     m_tss->m_completedCount.store(0);
     lk.unlock();
     m_tss->m_notifyWorkersCV->notify_all();
-    m_tss->m_notifySignalCV->wait(finishedLk);
+    m_tss->m_notifySignalCV->wait(finishedLk, [&]() { return (m_tss->m_completedCount == num_total_tasks); } );
     finishedLk.unlock();
 }
 
