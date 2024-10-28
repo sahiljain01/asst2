@@ -175,13 +175,6 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 	bool didSet = false;
 	while (!ts->m_inactive) { 
 		std::unique_lock<std::mutex> lk(*ts->m_queueMutex);
-		// std::cout << "thread waiting " << threadId << std::endl;
-		if (!didSet) {
-			ts->m_waitingThreads++;	
-			didSet = true;
-		}
-		// ts->m_notifyWorkersCV->wait(lk);
-		// std::cout << "thread running" << threadId << std::endl; 
 		int qSize = ts->m_queueSize;
 		auto runnable = ts->m_runnable;
 		int taskJustFinished = -1;
