@@ -212,7 +212,7 @@ const char* TaskSystemParallelThreadPoolSleeping::name() {
 
 TaskSystemParallelThreadPoolSleeping::TaskSystemParallelThreadPoolSleeping(int num_threads): ITaskSystem(num_threads) 
 {
-	m_numThreads = num_threads-1;
+	m_numThreads = num_threads;
 	std::mutex* mtx = new std::mutex();
 	std::mutex* finishedMtx = new std::mutex();
 	std::condition_variable* notifyWorkersCV = new std::condition_variable();
