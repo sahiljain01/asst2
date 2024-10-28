@@ -171,16 +171,20 @@ void TaskSystemParallelThreadPoolSpinning::sync() {
  * ================================================================
  */
 
-void spawnThreadSleeping(TaskSystemStateCV* ts) {
+void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 	while (!ts->m_inactive) { 
 		std::unique_lock<std::mutex> lk(*ts->m_queueMutex);
+		// std::cout << "thread waiting " << threadId << std::endl;
+	        ts->m_waitingThreads++;	
 		ts->m_notifyWorkersCV->wait(lk);
+		// std::cout << "thread running" << threadId << std::endl; 
 		int qSize = ts->m_queueSize;
 		auto runnable = ts->m_runnable;
 		int taskJustFinished = -1;
 		bool brokeOutOfLoop;
 		while ((qSize > 0) && (runnable != nullptr)) {
 			int taskToRun = --ts->m_queueSize;
+			// std::cout << "thread " << threadId << ", executing " << taskToRun << std::endl; 
 			lk.unlock();
 			runnable->runTask(taskToRun, ts->m_numTotalTasks);
 			taskJustFinished = ts->m_completedCount.fetch_add(1) + 1;
@@ -188,6 +192,7 @@ void spawnThreadSleeping(TaskSystemStateCV* ts) {
 				std::unique_lock<std::mutex> finishedLk(*ts->m_finishedMutex);
 				finishedLk.unlock();
 				ts->m_notifySignalCV->notify_all();
+				// std::cout << "notifying completed!" << std::endl;
 				brokeOutOfLoop = true;
 				break;
 			}
@@ -219,7 +224,10 @@ TaskSystemParallelThreadPoolSleeping::TaskSystemParallelThreadPoolSleeping(int n
 	m_threads = new std::thread[m_numThreads]; 
 
 	for (int i = 0; i < m_numThreads; i++) {
-		m_threads[i] = std::thread(spawnThreadSleeping, m_tss);
+		m_threads[i] = std::thread(spawnThreadSleeping, m_tss, i);
+	}
+	while (m_tss->m_waitingThreads != m_numThreads) {
+		continue;
 	}
 }
 
@@ -228,6 +236,7 @@ TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping()
 	m_tss->m_inactive = true;
 	m_tss->m_notifyWorkersCV->notify_all();
 	for (int i = 0; i < m_numThreads; i++) {
+		m_tss->m_notifyWorkersCV->notify_all();
 		m_threads[i].join();
 	}
 	delete[] m_threads;
