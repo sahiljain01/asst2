@@ -191,9 +191,11 @@ void spawnThreadSleeping(TaskSystemStateCV* ts) {
 			runnable = ts->m_runnable;
 		}
 		lk.unlock();
-		// if (taskJustFinished == ts->m_numTotalTasks) {
-		//	ts->m_notifySignalCV->notify_all();
-		// }
+		if (taskJustFinished == ts->m_numTotalTasks) {
+			std::unique_lock<std::mutex> finishedLk(*ts->m_finishedMutex);
+			finishedLk.unlock();
+			ts->m_notifySignalCV->notify_all();
+		 }
 		if (ts->m_inactive) {
 			break;
 		}
@@ -208,9 +210,10 @@ TaskSystemParallelThreadPoolSleeping::TaskSystemParallelThreadPoolSleeping(int n
 {
 	m_numThreads = num_threads-1;
 	std::mutex* mtx = new std::mutex();
+	std::mutex* finishedMtx = new std::mutex();
 	std::condition_variable* notifyWorkersCV = new std::condition_variable();
 	std::condition_variable* notifySignalCV = new std::condition_variable();
-	m_tss = new TaskSystemStateCV(0, 0, mtx, nullptr, false, notifyWorkersCV, notifySignalCV);
+	m_tss = new TaskSystemStateCV(0, 0, mtx, nullptr, false, notifyWorkersCV, notifySignalCV, finishedMtx);
 	m_threads = new std::thread[m_numThreads]; 
 
 	for (int i = 0; i < m_numThreads; i++) {
@@ -231,6 +234,7 @@ TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping()
 
 void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_total_tasks) {
     std::unique_lock<std::mutex> lk(*m_tss->m_queueMutex);
+    std::unique_lock<std::mutex> finishedLk(*m_tss->m_finishedMutex);
     m_tss->m_runnable = runnable;
     m_tss->m_numTotalTasks = num_total_tasks;
     m_tss->m_queueSize = num_total_tasks;
@@ -238,12 +242,12 @@ void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_tota
     lk.unlock();
     m_tss->m_notifyWorkersCV->notify_all();
     // std::unique_lock<std::mutex> lk2(*m_tss->m_queueMutex);
-    // m_tss->m_notifySignalCV->wait(lk2);
-    // lk2.unlock();
-    while (m_tss->m_completedCount < num_total_tasks) {
+    m_tss->m_notifySignalCV->wait(finishedLk);
+    finishedLk.unlock();
+    // while (m_tss->m_completedCount < num_total_tasks) {
     	    // std::cout << "queue size: " << m_tss->m_queueSize << std::endl;
-	    continue;
-    }
+//	    continue;
+ //   }
 }
 
 TaskID TaskSystemParallelThreadPoolSleeping::runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,

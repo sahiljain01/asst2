@@ -1,0 +1,69 @@
+===================================================================================
+Test name: ping_pong_equal
+===================================================================================
+[Serial]:		[1141.764] ms
+[Parallel + Always Spawn]:		[331.214] ms
+running task: running task: running task: running task: running task: running task: running task: 57596160625863
+
+
+
+
+
+
+running task: 56
+running task: 55
+running task: 54
+running task: 53
+running task: 52
+running task: 51
+running task: 50
+running task: 49
+running task: 48
+running task: 47
+running task: 46
+running task: 45
+running task: 44
+running task: 43
+running task: 42
+running task: 41
+running task: 40
+running task: 39
+running task: 38
+running task: 37
+running task: 36
+running task: 35
+running task: 34
+running task: 33
+running task: 32
+running task: 31
+running task: 30
+running task: 29
+running task: 28
+running task: 27
+running task: 26
+running task: 25
+running task: 24
+running task: 22
+running task: 23
+running task: 21
+running task: 20
+running task: 19
+running task: 18
+running task: 17
+running task: 16
+running task: 15
+running task: 14
+running task: 13
+running task: 12
+running task: 11
+running task: 10
+running task: 9
+running task: 8
+running task: 7
+running task: 6
+running task: 5
+running task: 4
+running task: 3
+running task: 2
+running task: 1
+running task: 0
