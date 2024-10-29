@@ -33,6 +33,7 @@ class TaskSystemState {
 	int m_queueSize;
 	int m_numTotalTasks;
 	std::mutex* m_queueMutex;
+	std::mutex* m_sm;
 	IRunnable* m_runnable;
 	std::atomic<int> m_completedCount;
 	bool m_inactive;
@@ -41,7 +42,7 @@ class TaskSystemState {
 
 class TaskSystemStateCV {
     public:
-        TaskSystemStateCV(int queueSize, int numTotalTasks, std::mutex* mtx, IRunnable* runnable, bool inactive, std::condition_variable* notifyWorkersCV, std::condition_variable* notifySignalCV, std::mutex* finishedMutex): m_queueSize(queueSize), m_numTotalTasks(numTotalTasks), m_queueMutex(mtx), m_runnable(runnable), m_completedCount(0), m_inactive(inactive), m_notifyWorkersCV(notifyWorkersCV), m_notifySignalCV(notifySignalCV), m_finishedMutex(finishedMutex) {}
+        TaskSystemStateCV(int queueSize, int numTotalTasks, std::mutex* mtx, IRunnable* runnable, bool inactive, std::condition_variable* notifyWorkersCV, std::condition_variable* notifySignalCV, std::mutex* finishedMutex, std::mutex* sm): m_queueSize(queueSize), m_numTotalTasks(numTotalTasks), m_queueMutex(mtx), m_runnable(runnable), m_completedCount(0), m_inactive(inactive), m_notifyWorkersCV(notifyWorkersCV), m_notifySignalCV(notifySignalCV), m_finishedMutex(finishedMutex), m_sm(sm) {}
 	~TaskSystemStateCV() {
 		delete m_queueMutex;
 	}
@@ -54,6 +55,7 @@ class TaskSystemStateCV {
 	std::condition_variable* m_notifyWorkersCV;
 	std::condition_variable* m_notifySignalCV;
 	std::mutex* m_finishedMutex;
+	std::mutex* m_sm;
 	// std::mutex* m_signalMutex;
 };
 
