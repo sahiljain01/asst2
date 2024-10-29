@@ -172,7 +172,8 @@ void TaskSystemParallelThreadPoolSpinning::sync() {
  */
 
 void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
-	while (!ts->m_inactive) { 
+	while (!ts->m_inactive) {
+	        // std::cout << "waiting ... " << std::endl;	
 		std::unique_lock<std::mutex> lk(*ts->m_queueMutex);
 		int qSize = ts->m_queueSize;
 		auto runnable = ts->m_runnable;
@@ -182,7 +183,7 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 			lk.unlock();
 			runnable->runTask(taskToRun, ts->m_numTotalTasks);
 			taskJustFinished = ts->m_completedCount.fetch_add(1) + 1;
-			if (taskJustFinished >= ts->m_numTotalTasks) {
+			if (taskJustFinished == ts->m_numTotalTasks) {
 				std::unique_lock<std::mutex> finishedLk(*ts->m_finishedMutex);
 				finishedLk.unlock();
 				ts->m_notifySignalCV->notify_all();
@@ -236,9 +237,9 @@ void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_tota
     m_tss->m_numTotalTasks = num_total_tasks;
     m_tss->m_queueSize = num_total_tasks;
     m_tss->m_completedCount.store(0);
+    std::unique_lock<std::mutex> finishedLk(*m_tss->m_finishedMutex);
     lk.unlock();
 
-    std::unique_lock<std::mutex> finishedLk(*m_tss->m_finishedMutex);
     m_tss->m_notifyWorkersCV->notify_all();
     m_tss->m_notifySignalCV->wait(finishedLk);
     finishedLk.unlock();
