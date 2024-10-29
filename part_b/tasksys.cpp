@@ -225,7 +225,7 @@ TaskID TaskSystemParallelThreadPoolSleeping::runAsyncWithDeps(IRunnable* runnabl
 	    } 
     }
     auto taskTss = new TaskSystemStateCV(num_total_tasks, num_total_tasks, runnable, false, depsCpy, task_id, taskLevelMutex);
-    if (deps.size() > 0) {
+    if (depsCpy.size() > 0) {
 	    m_taskQueue->m_tasksWaiting.push_back(taskTss);
     }
     else {
