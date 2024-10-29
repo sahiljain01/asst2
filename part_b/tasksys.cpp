@@ -191,7 +191,13 @@ TaskSystemParallelThreadPoolSleeping::TaskSystemParallelThreadPoolSleeping(int n
 
 
 TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping() {
-	// TODO: add destructor code here before submitting
+	m_taskQueue->m_inactive = true;
+	m_taskQueue->m_notifyWorkersCV->notify_all();
+	for (int i = 0; i < m_numThreads; i++) {
+		m_taskQueue->m_notifyWorkersCV->notify_all();
+		m_threads[i].join();
+	}
+	delete[] m_threads;	
 }
 
 
@@ -209,16 +215,14 @@ TaskID TaskSystemParallelThreadPoolSleeping::runAsyncWithDeps(IRunnable* runnabl
     std::mutex* taskLevelMutex = new std::mutex();
     std::vector<TaskID> depsCpy;
 
-    bool dep_not_satisfied = false;
     std::unique_lock<std::mutex> lk2(*m_taskQueue->m_queueMutex);
     for (auto dep: deps) {
 	    if (m_taskQueue->m_tasksCompleted.find(dep) == m_taskQueue->m_tasksCompleted.end()) {
-		   dep_not_satisfied = true;
 		   depsCpy.push_back(dep); 
 	    } 
     }
     auto taskTss = new TaskSystemStateCV(num_total_tasks, num_total_tasks, runnable, false, depsCpy, task_id, taskLevelMutex);
-    if (dep_not_satisfied) {
+    if (deps.size() > 0) {
 	    m_taskQueue->m_tasksWaiting.push_back(taskTss);
     }
     else {
