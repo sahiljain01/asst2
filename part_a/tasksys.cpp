@@ -185,9 +185,6 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 		int taskJustFinished = -1;
 		int taskToRun = --ts->m_queueSize;
 		int totalNumTasks = ts->m_numTotalTasks;
-		if (runnable == nullptr) {
-			std::cout << "runnable is nullptr " << std::endl;
-		}
 		lk.unlock();
 		runnable->runTask(taskToRun, totalNumTasks);
 		taskJustFinished = ts->m_completedCount.fetch_add(1) + 1;
