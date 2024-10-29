@@ -82,7 +82,7 @@ class TaskSystemStateCV {
 
 class TaskQueue {
 	public:
-		TaskQueue(std::vector<TaskSystemStateCV*> tasksReady, std::vector<TaskSystemStateCV*> tasksWaiting, std::condition_variable* notifyWorkersCV, std::condition_variable* notifySignalCV, std::mutex* queueMutex, bool inactive) : m_tasksReady(tasksReady), m_tasksWaiting(tasksWaiting), m_notifyWorkersCV(notifyWorkersCV), m_notifySignalCV(notifySignalCV), m_queueMutex(queueMutex), m_inactive(inactive), m_tasksCreated(0) {}
+		TaskQueue(std::vector<TaskSystemStateCV*> tasksReady, std::vector<TaskSystemStateCV*> tasksWaiting, std::condition_variable* notifyWorkersCV, std::condition_variable* notifySignalCV, std::mutex* queueMutex, bool inactive) : m_tasksReady(tasksReady), m_tasksWaiting(tasksWaiting), m_notifyWorkersCV(notifyWorkersCV), m_notifySignalCV(notifySignalCV), m_queueMutex(queueMutex), m_inactive(inactive), m_tasksCreated(0), exited_threads(0) {}
 
 		std::vector<TaskSystemStateCV*> m_tasksReady;
 		std::vector<TaskSystemStateCV*> m_tasksWaiting;
@@ -92,6 +92,7 @@ class TaskQueue {
 		bool m_inactive;
 		std::set<TaskID> m_tasksCompleted;
 		std::atomic<int> m_tasksCreated;
+		std::atomic<int> exited_threads;
 };
 
 

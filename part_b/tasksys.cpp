@@ -164,6 +164,7 @@ void spawnThreadSleeping(TaskQueue* tq) {
 		}	
 		lk.unlock();
 	}
+        tq->exited_threads++;	
 }
 
 const char* TaskSystemParallelThreadPoolSleeping::name() {
@@ -192,7 +193,9 @@ TaskSystemParallelThreadPoolSleeping::TaskSystemParallelThreadPoolSleeping(int n
 
 TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping() {
 	m_taskQueue->m_inactive = true;
-	m_taskQueue->m_notifyWorkersCV->notify_all();
+	while (m_taskQueue->exited_threads != m_numThreads) {
+		m_taskQueue->m_notifyWorkersCV->notify_all();
+	}
 	for (int i = 0; i < m_numThreads; i++) {
 		m_taskQueue->m_notifyWorkersCV->notify_all();
 		m_threads[i].join();
