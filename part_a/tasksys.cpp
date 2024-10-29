@@ -221,6 +221,7 @@ TaskSystemParallelThreadPoolSleeping::TaskSystemParallelThreadPoolSleeping(int n
 
 TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping() 
 {
+	std::cout << "trying to destruct" << std::endl;
 	m_tss->m_inactive = true;
 	m_tss->m_notifyWorkersCV->notify_all();
 	for (int i = 0; i < m_numThreads; i++) {
