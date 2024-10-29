@@ -125,35 +125,43 @@ void TaskSystemParallelThreadPoolSpinning::sync() {
 void spawnThreadSleeping(TaskQueue* tq) {
 	while (!tq->m_inactive) { 
 		std::unique_lock<std::mutex> lk(*tq->m_queueMutex);
-		while (tq->m_tasksReady.size() > 0) {
-			auto ts = tq->m_tasksReady[0];
-			int taskToRun = --ts->m_queueSize;
-			auto runnable = ts->m_runnable;
-			if (taskToRun == 0) {
-				tq->m_tasksReady.erase(tq->m_tasksReady.begin());
-			}
-			lk.unlock();
-			runnable->runTask(taskToRun, ts->m_numTotalTasks);
-			int completedCnt = ts->m_completedCount.fetch_add(1) + 1;
-			lk.lock();
-			if (completedCnt == ts->m_numTotalTasks) {
-				for (int j = 0; j < static_cast<int>(tq->m_tasksWaiting.size()); j++) {
-					auto tsWaiting = tq->m_tasksWaiting[j];
-					tsWaiting->m_activeDeps.erase(std::remove(tsWaiting->m_activeDeps.begin(), tsWaiting->m_activeDeps.end(), ts->m_taskID), tsWaiting->m_activeDeps.end());
-				}
-				auto it = tq->m_tasksWaiting.begin();
-				while (it != tq->m_tasksWaiting.end()) {
-					auto currentTask = *it;
-					if (currentTask->m_activeDeps.size() == 0) {
-						tq->m_notifyWorkersCV->notify_all();
-						tq->m_tasksReady.push_back(currentTask);
-						it = tq->m_tasksWaiting.erase(it);
-					}
-					else ++it;
-				}
-				tq->m_tasksCompleted.insert(ts->m_taskID);
-			}
+		if (tq->m_tasksReady.size() == 0) {
+			tq->m_notifyWorkersCV->wait(lk, [&]() { return tq->m_tasksReady.size() == 0; });
 		}
+		if ((tq->m_inactive) || (tq->m_tasksReady.size() == 0)) {
+		       lk.unlock();
+	       	       continue;
+		}	       
+		auto ts = tq->m_tasksReady[0];
+		int taskToRun = --ts->m_queueSize;
+		auto runnable = ts->m_runnable;
+		if (taskToRun == 0) {
+			tq->m_tasksReady.erase(tq->m_tasksReady.begin());
+		}
+		lk.unlock();
+		runnable->runTask(taskToRun, ts->m_numTotalTasks);
+		int completedCnt = ts->m_completedCount.fetch_add(1) + 1;
+		lk.lock();
+		if (completedCnt == ts->m_numTotalTasks) {
+			for (int j = 0; j < static_cast<int>(tq->m_tasksWaiting.size()); j++) {
+				auto tsWaiting = tq->m_tasksWaiting[j];
+				tsWaiting->m_activeDeps.erase(std::remove(tsWaiting->m_activeDeps.begin(), tsWaiting->m_activeDeps.end(), ts->m_taskID), tsWaiting->m_activeDeps.end());
+			}
+			auto it = tq->m_tasksWaiting.begin();
+			while (it != tq->m_tasksWaiting.end()) {
+				auto currentTask = *it;
+				if (currentTask->m_activeDeps.size() == 0) {
+					tq->m_tasksReady.push_back(currentTask);
+					tq->m_notifyWorkersCV->notify_all();
+					it = tq->m_tasksWaiting.erase(it);
+				}
+				else ++it;
+			}
+			tq->m_tasksCompleted.insert(ts->m_taskID);
+		}
+		if (tq->m_tasksCreated == tq->m_tasksCompleted.size()) {
+			tq->m_notifySignalCV->notify_all();
+		}	
 		lk.unlock();
 	}
 }
@@ -208,8 +216,7 @@ TaskID TaskSystemParallelThreadPoolSleeping::runAsyncWithDeps(IRunnable* runnabl
 	    if (m_taskQueue->m_tasksCompleted.find(dep) == m_taskQueue->m_tasksCompleted.end()) {
 		   dep_not_satisfied = true;
 		   depsCpy.push_back(dep); 
-	    }
-	    
+	    } 
     }
     auto taskTss = new TaskSystemStateCV(num_total_tasks, num_total_tasks, runnable, false, depsCpy, task_id, taskLevelMutex);
     if (dep_not_satisfied) {
@@ -219,22 +226,21 @@ TaskID TaskSystemParallelThreadPoolSleeping::runAsyncWithDeps(IRunnable* runnabl
 	    m_taskQueue->m_tasksReady.push_back(taskTss);
     }
     lk2.unlock(); 
-
     m_taskQueue->m_notifyWorkersCV->notify_all();
     return task_id;
 }
 
 void TaskSystemParallelThreadPoolSleeping::sync() {
+	/*
     while (m_currTaskID != m_taskQueue->m_tasksCompleted.size()) {
-	    for (auto waitingTask: m_taskQueue->m_tasksWaiting) {
-		    // std::cout << "task waiting: " << waitingTask->m_taskID << "for: " << waitingTask->m_activeDeps[0] << std::endl;
-	    }
-	    // std::cout << "task queue waiting size" << m_taskQueue->m_tasksWaiting.size() << std::endl;
-	    // std::cout << "task queue ready size" << m_taskQueue->m_tasksReady.size() << std::endl;
-            m_taskQueue->m_notifyWorkersCV->notify_all();
+	    m_taskQueue->m_notifyWorkersCV->notify_all();
 	    continue;
+    }*/
+
+    std::unique_lock<std::mutex> lk2(*m_taskQueue->m_queueMutex);
+    if (m_taskQueue->m_tasksCreated != m_taskQueue->m_tasksCompleted.size()) {
+	    m_taskQueue->m_notifySignalCV->wait(lk2, [&]() { return (m_taskQueue->m_tasksCreated == m_taskQueue->m_tasksCompleted.size()); }) ;
     }
-    return;
 }
 
 
