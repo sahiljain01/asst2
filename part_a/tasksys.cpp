@@ -187,7 +187,6 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 				std::unique_lock<std::mutex> finishedLk(*ts->m_finishedMutex);
 				finishedLk.unlock();
 				ts->m_notifySignalCV->notify_all();
-				break;
 			}
 			lk.lock();
 			qSize = ts->m_queueSize;
