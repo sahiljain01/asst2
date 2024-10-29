@@ -120,7 +120,6 @@ class TaskSystemParallelThreadPoolSleeping: public ITaskSystem {
 	int m_numThreads;
 	TaskSystemStateCV* m_tss;
 	std::thread* m_threads;
-
 };
 
 #endif

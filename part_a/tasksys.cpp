@@ -174,9 +174,6 @@ void TaskSystemParallelThreadPoolSpinning::sync() {
 void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 	while (!ts->m_inactive) {
 		std::unique_lock<std::mutex> lk(*ts->m_queueMutex);
-		if (ts->m_queueSize == 0) {
-			ts->m_notifyWorkersCV->wait(lk, [&]() { return ((ts->m_queueSize != 0) || (ts->m_inactive));} );
-		}
 		if ((ts->m_inactive) || (ts->m_queueSize == 0)) {
 			lk.unlock();
 			continue;
@@ -192,6 +189,9 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 			std::unique_lock<std::mutex> finishedLk(*ts->m_finishedMutex);
 			finishedLk.unlock();
 			ts->m_notifySignalCV->notify_all();
+		}
+		if (ts->m_queueSize == 0) {
+			ts->m_notifyWorkersCV->wait(lk, [&]() { return ((ts->m_queueSize != 0) || (ts->m_inactive));} );
 		}
 	}
 }
