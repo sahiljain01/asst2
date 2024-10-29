@@ -114,7 +114,7 @@ class TaskSystemParallelThreadPoolSleeping: public ITaskSystem {
     private:
 	int m_numThreads;
 	std::thread* m_threads;
-	std::atomic<int> m_currTaskID;
+	int m_currTaskID;
 	TaskQueue* m_taskQueue;
 };
 

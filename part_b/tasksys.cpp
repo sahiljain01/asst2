@@ -172,7 +172,7 @@ const char* TaskSystemParallelThreadPoolSleeping::name() {
 
 TaskSystemParallelThreadPoolSleeping::TaskSystemParallelThreadPoolSleeping(int num_threads): ITaskSystem(num_threads) {
 	m_numThreads = num_threads;
-	m_currTaskID.store(0);
+	m_currTaskID = 0;
 	std::mutex* mtx = new std::mutex();
 	std::condition_variable* notifyWorkersCV = new std::condition_variable();
 	std::condition_variable* notifySignalCV = new std::condition_variable();
@@ -204,8 +204,7 @@ void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_tota
 
 TaskID TaskSystemParallelThreadPoolSleeping::runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
                                                     const std::vector<TaskID>& deps) {
-    TaskID task_id = m_currTaskID.load(); 
-    m_currTaskID++;
+    TaskID task_id = m_currTaskID++; 
     m_taskQueue->m_tasksCreated++; 
     std::mutex* taskLevelMutex = new std::mutex();
     std::vector<TaskID> depsCpy;
@@ -231,12 +230,6 @@ TaskID TaskSystemParallelThreadPoolSleeping::runAsyncWithDeps(IRunnable* runnabl
 }
 
 void TaskSystemParallelThreadPoolSleeping::sync() {
-	/*
-    while (m_currTaskID != m_taskQueue->m_tasksCompleted.size()) {
-	    m_taskQueue->m_notifyWorkersCV->notify_all();
-	    continue;
-    }*/
-
     std::unique_lock<std::mutex> lk2(*m_taskQueue->m_queueMutex);
     if (m_taskQueue->m_tasksCreated != m_taskQueue->m_tasksCompleted.size()) {
 	    m_taskQueue->m_notifySignalCV->wait(lk2, [&]() { return (m_taskQueue->m_tasksCreated == m_taskQueue->m_tasksCompleted.size()); }) ;
