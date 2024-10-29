@@ -237,12 +237,13 @@ TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping()
 
 void TaskSystemParallelThreadPoolSleeping::run(IRunnable* runnable, int num_total_tasks) {
     std::unique_lock<std::mutex> lk(*m_tss->m_queueMutex);
-    std::unique_lock<std::mutex> finishedLk(*m_tss->m_finishedMutex);
     m_tss->m_runnable = runnable;
     m_tss->m_numTotalTasks = num_total_tasks;
     m_tss->m_queueSize = num_total_tasks;
     m_tss->m_completedCount.store(0);
     lk.unlock();
+
+    std::unique_lock<std::mutex> finishedLk(*m_tss->m_finishedMutex);
     m_tss->m_notifyWorkersCV->notify_all();
     m_tss->m_notifySignalCV->wait(finishedLk);
     finishedLk.unlock();
