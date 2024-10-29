@@ -194,13 +194,11 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 			qSize = ts->m_queueSize;
 			runnable = ts->m_runnable;
 		}
-		if (!brokeOutOfLoop) {
-			lk.unlock();
-		}
-		if (ts->m_inactive) {
-			break;
-		}
-	        ts->m_notifyWorkersCV->wait(lk);	
+		// if (!brokeOutOfLoop) {
+		//	lk.unlock();
+		// }
+	        ts->m_notifyWorkersCV->wait(lk);
+	        lk.unlock();	
 	}
 }
 
