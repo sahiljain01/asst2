@@ -126,7 +126,7 @@ void spawnThreadSleeping(TaskQueue* tq) {
 	while (!tq->m_inactive) { 
 		std::unique_lock<std::mutex> lk(*tq->m_queueMutex);
 		if (tq->m_tasksReady.size() == 0) {
-			tq->m_notifyWorkersCV->wait(lk, [&]() { return (tq->m_tasksReady.size() != 0) || (tq->m_inactive); });
+			tq->m_notifyWorkersCV->wait(lk);
 		}
 		if ((tq->m_inactive) || (tq->m_tasksReady.size() == 0)) {
 		       lk.unlock();
