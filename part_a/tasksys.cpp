@@ -228,6 +228,7 @@ TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping()
 	m_tss->m_inactive = true;
 	m_tss->m_notifyWorkersCV->notify_all();
 	for (int i = 0; i < m_numThreads; i++) {
+		m_tss->m_notifyWorkersCV->notify_all();
 		m_threads[i].join();
 	}
 	delete[] m_threads;
