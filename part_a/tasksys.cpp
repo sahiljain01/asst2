@@ -175,7 +175,7 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 	while (!ts->m_inactive) {
 		std::unique_lock<std::mutex> lk(*ts->m_queueMutex);
 		if (ts->m_queueSize == 0) {
-			ts->m_notifyWorkersCV->wait(lk);
+			ts->m_notifyWorkersCV->wait(lk, [&]() { return ts->m_queueSize == 0 ;} );
 		}
 		if ((ts->m_inactive) || (ts->m_queueSize == 0)) {
 			lk.unlock();
