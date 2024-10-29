@@ -187,7 +187,6 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 				std::unique_lock<std::mutex> finishedLk(*ts->m_finishedMutex);
 				finishedLk.unlock();
 				ts->m_notifySignalCV->notify_all();
-				brokeOutOfLoop = true;
 				break;
 			}
 			lk.lock();
@@ -198,7 +197,6 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 		//	lk.unlock();
 		// }
 	        ts->m_notifyWorkersCV->wait(lk);
-	        lk.unlock();	
 	}
 }
 
