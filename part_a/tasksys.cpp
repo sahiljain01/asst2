@@ -177,13 +177,12 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 		int qSize = ts->m_queueSize;
 		auto runnable = ts->m_runnable;
 		int taskJustFinished = -1;
-		bool brokeOutOfLoop;
 		while ((qSize > 0) && (runnable != nullptr)) {
 			int taskToRun = --ts->m_queueSize;
 			lk.unlock();
 			runnable->runTask(taskToRun, ts->m_numTotalTasks);
 			taskJustFinished = ts->m_completedCount.fetch_add(1) + 1;
-			if (taskJustFinished == ts->m_numTotalTasks) {
+			if (taskJustFinished >= ts->m_numTotalTasks) {
 				std::unique_lock<std::mutex> finishedLk(*ts->m_finishedMutex);
 				finishedLk.unlock();
 				ts->m_notifySignalCV->notify_all();
@@ -195,7 +194,7 @@ void spawnThreadSleeping(TaskSystemStateCV* ts, int threadId) {
 		// if (!brokeOutOfLoop) {
 		//	lk.unlock();
 		// }
-	        ts->m_notifyWorkersCV->wait(lk);
+	        // ts->m_notifyWorkersCV->wait(lk);
 	}
 }
 

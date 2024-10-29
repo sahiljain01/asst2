@@ -54,6 +54,7 @@ class TaskSystemStateCV {
 	std::condition_variable* m_notifyWorkersCV;
 	std::condition_variable* m_notifySignalCV;
 	std::mutex* m_finishedMutex;
+	// std::mutex* m_signalMutex;
 };
 
 /*
